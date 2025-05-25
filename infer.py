@@ -13,6 +13,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 from utils.extract import extract_last_boxed_text, extract_tag_contents
 from utils.prompt import build_prompt
+from utils.load_metadata import load_metadata_by_key
 
 dotenv.load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -63,9 +64,7 @@ def main() -> None:
         title="[bold green]Configuration"
     ))
 
-    INFILE = f"data/{args.data_type}/{args.data_type}_final.json"
-    with open(INFILE, "r") as f:
-        metadata = json.load(f)
+    metadata = load_metadata_by_key(args.data_type)
         
     OUTFILE = f"data/{args.data_type}/{args.model.lower().replace('-', '_')}/"
     if args.cot:

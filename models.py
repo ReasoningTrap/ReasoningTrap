@@ -25,20 +25,3 @@ MODELS = {
     "llama_1b": ("meta-llama/Llama-3.2-1B", 32768, 0.6, 0.9, -1, 1.0),
     "openr1_7b": ("open-r1/OpenR1-Qwen-7B", 32768, 0.6, 0.95, -1, 1.0),
     }
-
-OR_MODELS = {
-    "qwen3_235b_think": ("qwen/qwen3-235b-a22b", 32768, 0.6, 0.95, -1, 1.0),
-    "qwen3_235b_nothink": ("qwen/qwen3-235b-a22b", 16384, 0.7, 0.8, -1, 1.0),
-    "ds-8b": ("deepseek/deepseek-r1-distill-llama-8b", 32768, 0.6, 0.95, -1, 1.0),
-    "llama-8b": ("meta-llama/llama-3.1-8b-instruct", 32768, 1.0, 1.0, -1, 1.0),
-    "ds-r1": ("deepseek/deepseek-r1", 32768, 0.6, 0.95, -1, 1.0), # OR
-    "ds-v3": ("deepseek/deepseek-chat", 32768, 0.6, 0.95, -1, 1.0), # OR
-    "claude_think": ("anthropic/claude-3.7-sonnet:thinking", 32768, None, None, None, None), # OR
-    "claude_nothink": ("anthropic/claude-3.7-sonnet", 32768, None, None, None, None), # OR
-    "chatgpt-4o": ("openai/chatgpt-4o-latest", 32768, None, None, None, None), # OR
-    "o3-mini": ("openai/o3-mini", 32768, None, None, None, None), # OR
-    "o4-mini": ("openai/o4-mini", 32768, None, None, None, None), # OR
-    "gpt-4o": ("openai/gpt-4o", 32768, None, None, None, None), # OR
-    "gemini-think": "gemini-2.5-flash-preview-04-17",
-    "gemini-nothink": "gemini-2.5-flash-preview-04-17",
-}

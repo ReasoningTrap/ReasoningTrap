@@ -2,15 +2,17 @@ import dotenv
 dotenv.load_dotenv(override=True)
 import os
 import json
-
+import re
+import glob
 import argparse
 from openai import OpenAI
 from pathlib import Path
 import multiprocessing as mp
 from tqdm import tqdm
 from utils.math_utils import grade_answer_sympy
-from models import MODELS, OR_MODELS
+from models import MODELS
 from utils.extract import extract_last_boxed_text
+from utils.load_metadata import load_metadata_by_key
 # Configure logging
 # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -27,14 +29,7 @@ Ground truth:
 """
 
 
-class EvalPipeline:
-    def __init__(self, metafile, json_file):
-        with open(metafile, "r") as f:
-            self.metadata = json.load(f)
-            
-        with open(json_file, "r") as f:
-            self.data = json.load(f)
-        
+class EvalPipeline:        
     @staticmethod
     def evaluate_perception(args):
         model_raw, gt_reason, question, problem_id = args
@@ -134,22 +129,27 @@ class EvalPipeline:
             
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--data", type=str, default="aime", choices=["aime", "math500", "puzzle"])
-    p.add_argument("--model", type=str, choices=list(MODELS.keys()) + list(OR_MODELS.keys()))
+    p.add_argument("--data_type", type=str, default="aime", choices=["aime", "math500", "puzzle"])
+    p.add_argument("--model", type=str, choices=list(MODELS.keys()))
     p.add_argument("--type_flag", type=str, default="modified", choices=["modified", "original"])
     args = p.parse_args()
     
-    INFILE = f"data/{args.data}/{args.model}/{args.type_flag}_16.json"
-    META = f"data/{args.data}/{args.data}_final.json"
-    OUT_FILE = f"eval/{args.data}/{args.model}_{args.type_flag}.json"
+    INFILE = f"data/{args.data_type}/{args.model}/{args.type_flag}_16.json"
+    OUT_FILE = f"eval/{args.data_type}/{args.model}_{args.type_flag}.json"
 
     try:
-        data = json.load(open(INFILE, "r")) 
+        data = json.load(open(INFILE, "r"))
     except:
-        INFILE = INFILE.replace("_16.json", "_4.json")
-        data = json.load(open(INFILE, "r")) 
+        base_pattern = re.sub(r"_\d+\.json$", "_*.json", INFILE)
+        matching_files = sorted(glob.glob(base_pattern))
         
-    metadata = json.load(open(META, "r"))
+        if not matching_files:
+            raise FileNotFoundError(f"No matching files found for pattern: {base_pattern}")
+        
+        INFILE = matching_files[0]  # Pick the first matching file
+        data = json.load(open(INFILE, "r"))
+        
+    metadata = load_metadata_by_key(args.data_type)
     if Path(OUT_FILE).exists():
         print(f"File {OUT_FILE} already exists. Exiting.")
         exit()
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         model_answer = [extract_last_boxed_text(r) if not len(a) else a for r, a in zip(model_reasoning, model_answer)]
         question: str = meta[f'{args.type_flag}_question']
         # Multiprocessing
-        if args.data == "puzzle":
+        if args.data_type == "puzzle":
             passk_args.append((model_raw, gt_answer, problem_id))
         else:
             passk_args.append((model_answer, gt_answer, problem_id))
@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     
     with mp.Pool(processes=10) as pool:
-        if args.data == "puzzle":
+        if args.data_type == "puzzle":
             results_passk = list(tqdm(
                 pool.imap(EvalPipeline.evaluate_passk_puzzle, passk_args),
                 total=len(passk_args),
